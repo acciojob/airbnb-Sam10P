@@ -15,17 +15,17 @@ import java.util.UUID;
 @Repository
 public class HotelManagementRepository {
 
-    TreeMap<String, Hotel> hotelDb = new TreeMap<>();
+    HashMap<String, Hotel> hotelDb = new HashMap<>();
     HashMap<Integer, User> userDb = new HashMap<>();
-
     HashMap<String, Booking> bookingDb = new HashMap<>();
+//    HashMap<Integer,Integer> countOfBookings = new HashMap<>();
 
 
     public String addHotel(Hotel hotel){
-        if(hotelDb.containsKey(hotel.getHotelName())){
+        if(hotel.getHotelName() == null || hotel == null){
             return "FAILURE";
         }
-        if(hotel.getHotelName() == null || hotel == null){
+        if(hotelDb.containsKey(hotel.getHotelName())){
             return "FAILURE";
         }
         hotelDb.put(hotel.getHotelName(), hotel);
@@ -44,6 +44,12 @@ public class HotelManagementRepository {
             Hotel hotel = hotelDb.get(hotelName);
             if(hotel.getFacilities().size() > noOfFacility){
                 ans = hotelName;
+                noOfFacility = hotel.getFacilities().size();
+            }
+            else if (hotel.getFacilities().size() == noOfFacility) {
+                if(hotelName.compareTo(ans) < 0){
+                    ans = hotelName;
+                }
             }
         }
         return ans;
@@ -61,18 +67,25 @@ public class HotelManagementRepository {
         String bookingId = uuid.toString();
         booking.setBookingId(bookingId);
 
-        bookingDb.put(bookingId, booking);
-
         String hotelName = booking.getHotelName();
         Hotel hotel = hotelDb.get(hotelName);
         int pricePerNight = hotel.getPricePerNight();
         int noOfRooms = booking.getNoOfRooms();
         int availableRooms = hotel.getAvailableRooms();
-//        ***** revisit in case to update available rooms. *****
         if(noOfRooms > availableRooms){
             return -1;
         }
         int amountPaid = noOfRooms * pricePerNight;
+        booking.setAmountToBePaid(amountPaid);
+
+        hotel.setAvailableRooms(availableRooms - noOfRooms);
+        bookingDb.put(bookingId, booking);
+        hotelDb.put(hotelName, hotel);
+
+//        int aadharCard = booking.getBookingAadharCard();
+//        int currentBookings = countOfBookings.getOrDefault(aadharCard, 0);
+//        countOfBookings.put(aadharCard, currentBookings+1);
+
         return amountPaid;
     }
 
@@ -85,6 +98,8 @@ public class HotelManagementRepository {
             }
         }
         return ans;
+
+//        return countOfBookings.get(aadharCard);
     }
 
     public Hotel updateFacilities(List<Facility> newFacilities, String hotelName){
